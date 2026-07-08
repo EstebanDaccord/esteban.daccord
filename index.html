@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esteban Daccord — Designer graphique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600&family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FAFAF8;
+    --paper-rgb: 250,250,248;
+    --paper-dim: #F1F0EC;
+    --ink: #141412;
+    --ink-soft: #4A4A46;
+    --muted: #8C8C86;
+    --spot: #FF4B12;
+    --line: #DEDDD6;
+    --radius: 2px;
+    color-scheme: light;
+    transition: background .35s ease, color .35s ease;
+  }
+
+  :root[data-theme="dark"]{
+    --paper: #141412;
+    --paper-rgb: 20,20,18;
+    --paper-dim: #1D1D1A;
+    --ink: #FAFAF8;
+    --ink-soft: #C9C8C2;
+    --muted: #75746E;
+    --spot: #FF5C29;
+    --line: #2E2E2A;
+    color-scheme: dark;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; overflow-x: hidden; }
+  body{ overflow-x: hidden; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background .35s ease, color .35s ease;
+  }
+
+  a{ color: inherit; }
+  :focus-visible{ outline: 2px solid var(--spot); outline-offset: 3px; }
+  button{ font-family: inherit; }
+
+  .mono{
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  .regmark{
+    position: relative;
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+  }
+  .regmark::before, .regmark::after{
+    content:'';
+    position:absolute;
+    background: var(--muted);
+  }
+  .regmark::before{ top:50%; left:0; width:100%; height:1px; transform: translateY(-50%); }
+  .regmark::after{ left:50%; top:0; height:100%; width:1px; transform: translateX(-50%); }
+  .regmark-circle{
+    position:absolute; top:50%; left:50%;
+    width:9px; height:9px;
+    border:1px solid var(--muted);
+    border-radius:50%;
+    transform: translate(-50%,-50%);
+  }
+
+  /* ---------- Entry overlay (nécessaire pour activer le son) ---------- */
+  .entry{
+    position: fixed; inset:0;
+    background: var(--paper);
+    z-index: 200;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 22px;
+    cursor: pointer;
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+  .entry.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  .entry-mark{ width: 46px; height:46px; position:relative; }
+  .entry-mark::before, .entry-mark::after{ content:''; position:absolute; background: var(--ink); }
+  .entry-mark::before{ top:50%; left:0; width:100%; height:1px; transform: translateY(-50%); }
+  .entry-mark::after{ left:50%; top:0; height:100%; width:1px; transform: translateX(-50%); }
+  .entry-circle{
+    position:absolute; top:50%; left:50%;
+    width:22px; height:22px;
+    border:1px solid var(--ink);
+    border-radius:50%;
+    transform: translate(-50%,-50%);
+  }
+  .entry-text{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+  }
+  .entry-sub{
+    font-size: 0.72rem;
+    color: var(--muted);
+    max-width: 260px;
+    text-align:center;
+    line-height:1.5;
+  }
+
+  .toolbar{
+    display:flex;
+    align-items:stretch;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sound-ctrl, .theme-ctrl{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    background: transparent;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+  .theme-ctrl{ border-right: 1px solid var(--line); }
+  .sound-ctrl:hover, .theme-ctrl:hover{ background: var(--paper-dim); }
+  .sound-bars{ display:flex; align-items:flex-end; gap: 2px; height: 10px; }
+  .sound-bars span{
+    width: 2px;
+    background: var(--ink);
+    display:block;
+    transition: transform .2s ease, background .2s ease;
+    transform-origin: bottom;
+  }
+  .sound-bars span:nth-child(1){ height: 4px; }
+  .sound-bars span:nth-child(2){ height: 9px; }
+  .sound-bars span:nth-child(3){ height: 6px; }
+  .sound-ctrl.muted .sound-bars span{ transform: scaleY(0.15); background: var(--muted); }
+  .sound-ctrl.playing .sound-bars span{ animation: bounce 0.9s ease-in-out infinite; }
+  .sound-ctrl.playing .sound-bars span:nth-child(2){ animation-delay: .15s; }
+  .sound-ctrl.playing .sound-bars span:nth-child(3){ animation-delay: .3s; }
+  @keyframes bounce{
+    0%, 100%{ transform: scaleY(0.4); }
+    50%{ transform: scaleY(1); }
+  }
+  .sound-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px){
+    .sound-label, .theme-label{ display:none; }
+    .sound-ctrl, .theme-ctrl{ padding: 7px 11px; }
+  }
+
+  /* ---------- Theme toggle ---------- */
+  .theme-swatch{
+    position: relative;
+    width: 11px; height: 11px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--ink) 50%, var(--paper) 50%);
+    transition: transform .3s ease;
+    flex-shrink: 0;
+  }
+  .theme-ctrl:active .theme-swatch{ transform: rotate(180deg); }
+  .theme-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position: sticky;
+    top:0;
+    z-index: 20;
+    background: rgba(var(--paper-rgb),0.88);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 16px 20px;
+    padding: 16px 0;
+    flex-wrap: wrap;
+  }
+  .nav-name{
+    font-family:'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+  .nav-right{
+    display:flex;
+    align-items:center;
+    gap: 20px;
+    min-width:0;
+  }
+  .nav-links{
+    display:flex;
+    gap: 18px;
+    list-style:none;
+    margin:0; padding:0;
+    font-size: 0.82rem;
+  }
+  .nav-links a{
+    text-decoration:none;
+    color: var(--ink-soft);
+    transition: color .15s ease;
+    white-space: nowrap;
+  }
+  .nav-links a:hover{ color: var(--spot); }
+
+  @media (max-width: 640px){
+    .nav-right{ order: 3; width: 100%; justify-content: space-between; }
+    .nav-links{ gap: 14px; font-size: 0.78rem; }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding: 96px 0 72px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .hero-tag{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .hero h1{
+    font-family:'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(3rem, 9vw, 6.4rem);
+    line-height: 0.98;
+    margin: 0 0 28px;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 em{
+    font-style: normal;
+    font-weight: 500;
+    color: var(--spot);
+  }
+  .hero-sub{
+    max-width: 640px;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 0 40px;
+  }
+  .specs{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 24px 32px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    max-width: 780px;
+  }
+  .spec dt{
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .04em;
+  }
+  .spec dd{ margin:0; font-size: 0.9rem; overflow-wrap: break-word; }
+  .spec{ margin:0; min-width:0; }
+
+  @media (max-width: 720px){
+    .specs{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+
+  /* ---------- Carousel (projets perso) ---------- */
+  .carousel-wrap{ margin-top: 64px; }
+  .carousel-head{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    gap: 16px;
+  }
+  .carousel-nav{ display:flex; gap: 8px; }
+  .carousel-btn{
+    width: 36px; height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .carousel-btn:hover{ border-color: var(--ink); background: var(--paper-dim); }
+  .carousel-btn svg{ width: 13px; height: 13px; }
+  .carousel-btn svg path{ stroke: var(--ink); stroke-width: 1.6; fill:none; stroke-linecap: round; stroke-linejoin: round; }
+
+  .carousel-viewport{ overflow: hidden; }
+  .carousel-track{
+    display:flex;
+    gap: 14px;
+    padding-bottom: 6px;
+  }
+
+  .carousel-item{
+    position: relative;
+    flex: 0 0 auto;
+    width: 240px;
+    height: 320px;
+    overflow: hidden;
+    background: var(--paper-dim);
+  }
+  .carousel-item img{
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display:block;
+    transition: transform .5s cubic-bezier(.16,1,.3,1);
+    pointer-events: none;
+  }
+  .carousel-item:hover img{ transform: scale(1.045); }
+  .carousel-overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:flex-end;
+    padding: 16px;
+    background: rgba(20,20,18,0);
+    transition: background .3s ease;
+  }
+  .carousel-item:hover .carousel-overlay{ background: rgba(20,20,18,0.4); }
+  .carousel-item-title{
+    font-family:'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.02rem;
+    color: #FAFAF8;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .carousel-item:hover .carousel-item-title{ opacity:1; transform: translateY(0); }
+
+  @media (max-width: 640px){
+    .carousel-item{ width: 190px; height: 250px; }
+  }
+
+  /* ---------- Lightbox ---------- */
+  .lightbox-backdrop{
+    position: fixed; inset:0;
+    background: rgba(10,10,9,0.82);
+    z-index: 150;
+    display:flex; align-items:center; justify-content:center;
+    padding: 48px 20px;
+    opacity: 0; pointer-events:none;
+    transition: opacity .25s ease;
+  }
+  .lightbox-backdrop.open{ opacity:1; pointer-events:auto; }
+  .lightbox-inner{ position: relative; max-width: 90vw; }
+  .lightbox-inner img{
+    display:block;
+    max-width: 90vw;
+    max-height: 78vh;
+    margin: 0 auto;
+  }
+  .lightbox-title{
+    text-align:center;
+    color: #FAFAF8;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    letter-spacing: .04em;
+  }
+  .lightbox-close{
+    position: absolute;
+    top: -46px; right: 0;
+    width: 36px; height:36px;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: transparent;
+    color: #FAFAF8;
+    cursor: pointer;
+    font-size: 1rem;
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .15s ease;
+  }
+  .lightbox-close:hover{ border-color: #FAFAF8; }
+
+  /* ---------- Project detail page ---------- */
+  .project-detail{
+    position: fixed; inset:0;
+    background: var(--paper);
+    z-index: 120;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(24px);
+    pointer-events: none;
+    transition: opacity .35s ease, transform .35s ease, background .35s ease;
+  }
+  .project-detail.open{ opacity:1; transform: translateY(0); pointer-events: auto; }
+
+  .project-detail-inner{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+  }
+
+  .project-back{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--line);
+    padding: 9px 18px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+    margin-bottom: 56px;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .project-back:hover{ border-color: var(--ink); color: var(--ink); }
+
+  .project-tag{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: var(--spot);
+    letter-spacing: .04em;
+  }
+  .project-title{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    line-height: 1.02;
+    margin: 12px 0 32px;
+    max-width: 760px;
+  }
+
+  .project-meta{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 24px 32px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    margin-bottom: 44px;
+    max-width: 620px;
+  }
+  .project-meta dt{
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .04em;
+  }
+  .project-meta dd{ margin:0; font-size: 0.9rem; overflow-wrap: break-word; }
+  @media (max-width: 560px){
+    .project-meta{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+
+  .project-desc{
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    max-width: 640px;
+    margin: 0 0 60px;
+  }
+
+  .project-section-label{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: .05em;
+    margin-bottom: 20px;
+  }
+
+  .project-palette{
+    display:flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    margin-bottom: 72px;
+  }
+  .palette-chip{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap: 10px;
+  }
+  .palette-swatch{
+    width: 62px; height: 62px;
+    border: 1px solid var(--line);
+  }
+  .palette-hex{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+  }
+
+  /* Carrousel de visuels du projet (taille uniforme, boucle infinie) */
+  .pd-carousel{
+    overflow: hidden;
+    margin-bottom: 70px;
+  }
+  .pd-carousel-track{
+    display:flex;
+    gap: 14px;
+  }
+  .pd-carousel-track .carousel-item{ cursor: pointer; }
+
+  @media (max-width: 640px){
+    .photo-card{ margin: 16px -14px; }
+    .photo-card img{ width: 160px; height: 205px; }
+  }
+
+  /* ---------- Section label ---------- */
+  .section{ padding: 88px 0; border-bottom: 1px solid var(--line); }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .section-eyebrow{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin:0;
+  }
+
+  /* ---------- Work grid ---------- */
+  .work-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  @media (max-width: 780px){
+    .work-grid{ grid-template-columns: 1fr; }
+  }
+  .card{
+    background: var(--paper);
+    padding: 32px;
+    position: relative;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+  .card:hover{ background: var(--paper-dim); }
+  .card-frame{
+    aspect-ratio: 4/3;
+    background:
+      linear-gradient(135deg, #ECEBE5 25%, transparent 25%) -10px 0/20px 20px,
+      linear-gradient(225deg, #ECEBE5 25%, transparent 25%) -10px 0/20px 20px,
+      linear-gradient(315deg, #ECEBE5 25%, transparent 25%) 0 0/20px 20px,
+      linear-gradient(45deg, #ECEBE5 25%, transparent 25%) 0 0/20px 20px;
+    background-color: #F4F3EF;
+    margin-bottom: 20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .card-top{
+    display:flex;
+    justify-content: space-between;
+    align-items:flex-start;
+    margin-bottom: 8px;
+  }
+  .card-num{ font-size: 0.75rem; color: var(--muted); }
+  .card h3{
+    font-family:'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin: 4px 0 6px;
+  }
+  .card p{
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .swatches{ display:flex; gap: 6px; }
+  .swatch{ width: 16px; height:16px; border: 1px solid var(--line); }
+  .tags{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .tag{
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    padding: 4px 9px;
+    letter-spacing: .03em;
+  }
+
+  /* ---------- About / CV ---------- */
+  .about-header{
+    display:flex;
+    gap: 44px;
+    align-items: flex-start;
+    margin-bottom: 56px;
+    flex-wrap: wrap;
+  }
+  .about-photo{ width: 190px; flex-shrink: 0; }
+  .about-photo img{
+    width: 100%;
+    display:block;
+    filter: grayscale(100%);
+    border: 1px solid var(--line);
+  }
+  .about-photo-caption{
+    display:block;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .about-intro{
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    max-width: 560px;
+    flex: 1;
+    min-width: 260px;
+    margin: 0;
+  }
+  @media (max-width: 560px){
+    .about-photo{ width: 140px; }
+  }
+
+  .about-columns{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 64px;
+  }
+  @media (max-width: 860px){
+    .about-columns{ grid-template-columns: 1fr; }
+  }
+
+  .cv-block{ margin-bottom: 48px; }
+  .cv-block:last-child{ margin-bottom: 0; }
+  .cv-block-title{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    margin: 0 0 20px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+
+  .cv-timeline{ list-style:none; margin:0; padding:0; }
+  .cv-item{
+    display:grid;
+    grid-template-columns: 100px 1fr;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .cv-item:first-child{ padding-top: 0; }
+  .cv-date{ font-size: 0.76rem; color: var(--muted); white-space: nowrap; padding-top: 3px; }
+  .cv-item h4{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+  }
+  .cv-place{
+    display:block;
+    font-size: 0.82rem;
+    color: var(--spot);
+    margin-bottom: 8px;
+  }
+  .cv-item p{
+    margin:0;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .cv-current{
+    color: var(--spot);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-left: 10px;
+    vertical-align: middle;
+    border: 1px solid var(--spot);
+    padding: 2px 7px;
+  }
+  @media (max-width: 560px){
+    .cv-item{ grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  .lang-row{ margin-bottom: 18px; }
+  .lang-row:last-child{ margin-bottom: 0; }
+  .lang-top{
+    display:flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    margin-bottom: 7px;
+  }
+  .lang-track{ height: 4px; background: var(--line); position: relative; }
+  .lang-fill{ position:absolute; top:0; left:0; height:100%; background: var(--ink); }
+
+  .interest-list{ list-style:none; margin:0; padding:0; }
+  .interest-list li{
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .interest-list li:last-child{ border-bottom: none; }
+  .interest-list strong{
+    display:block;
+    color: var(--ink);
+    font-weight: 500;
+    font-family: 'Fraunces', serif;
+    font-size: 0.98rem;
+    margin-bottom: 2px;
+  }
+
+  /* ---------- Contact / footer ---------- */
+  .contact{ padding: 96px 0 64px; text-align: center; }
+  .contact-title{
+    font-family:'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(2.4rem, 7vw, 4.4rem);
+    margin: 0 0 32px;
+  }
+  .contact-title em{ font-style: normal; font-weight: 500; color: var(--spot); }
+  .contact-cta{
+    display:inline-flex;
+    align-items:center;
+    gap: 10px;
+    text-decoration:none;
+    font-size: 1rem;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 4px;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .contact-cta:hover{ color: var(--spot); border-color: var(--spot); }
+
+  footer{
+    padding: 28px 0 48px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer a{ text-decoration:none; color: var(--muted); }
+  footer a:hover{ color: var(--spot); }
+</style>
+</head>
+<body>
+
+<div class="entry" id="entry">
+  <div class="entry-mark"><span class="entry-circle"></span></div>
+  <span class="entry-text">Cliquer pour entrer</span>
+  <span class="entry-sub">Ce site se visite avec le son. Vous pourrez le couper à tout moment.</span>
+</div>
+
+<audio id="bgAudio" src="ambiance.mp3" loop preload="auto"></audio>
+
+<header>
+  <div class="wrap nav">
+    <div class="nav-name">Esteban Daccord</div>
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="#travaux">Travaux</a></li>
+        <li><a href="#apropos">À propos</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="toolbar">
+        <div class="theme-ctrl" id="themeCtrl">
+          <span class="theme-swatch"></span>
+          <span class="theme-label mono" id="themeLabel">Sombre</span>
+        </div>
+        <div class="sound-ctrl muted" id="soundCtrl">
+          <div class="sound-bars"><span></span><span></span><span></span></div>
+          <span class="sound-label mono">Son</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-tag">
+      <span class="regmark"><span class="regmark-circle"></span></span>
+      <span class="mono">Polygraphe en formation — Identité &amp; Print</span>
+    </div>
+    <h1>Bienvenue dans mon <em>monde</em></h1>
+    <p class="hero-sub">
+      Je suis Esteban Daccord, apprenti polygraphe animé par la création, le design et le plaisir de transformer une idée en un support visuel concret.
+    </p>
+    <dl class="specs">
+      <div class="spec">
+        <dt>Basé à</dt>
+        <dd>Yverdon-les-Bains, Suisse</dd>
+      </div>
+      <div class="spec">
+        <dt>Spécialité</dt>
+        <dd>Identité visuelle</dd>
+      </div>
+      <div class="spec">
+        <dt>Également</dt>
+        <dd>Print &amp; édition</dd>
+      </div>
+      <div class="spec">
+        <dt>Statut</dt>
+        <dd>En formation (polygraphe)</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section class="section" id="travaux">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">
+          <span class="regmark"><span class="regmark-circle"></span></span>
+          <span class="mono">Sélection</span>
+        </div>
+        <h2 class="section-title">Travaux récents</h2>
+      </div>
+    </div>
+
+    <div class="work-grid">
+
+      <article class="card" data-project="grandeenquete">
+        <div class="card-frame" style="background-image:url('ge-couverture.jpg'); background-size:cover; background-position:center;"></div>
+        <div class="card-top">
+          <div>
+            <span class="card-num mono">01</span>
+            <h3>La Grande Enquête</h3>
+          </div>
+        </div>
+        <p>Flyer et marque-page pour une conférence de l'UNINE, conçus à partir des scans d'archives linguistiques.</p>
+        <div class="swatches">
+          <span class="swatch" style="background:#387185;"></span>
+          <span class="swatch" style="background:#FCACAA;"></span>
+          <span class="swatch" style="background:#97C5A1;"></span>
+        </div>
+        <div class="tags">
+          <span class="tag">Édition</span>
+          <span class="tag">Print</span>
+        </div>
+      </article>
+
+      <article class="card" data-project="souspression">
+        <div class="card-frame" style="background-image:url('sp-01.jpg'); background-size:cover; background-position:center;"></div>
+        <div class="card-top">
+          <div>
+            <span class="card-num mono">02</span>
+            <h3>Sous-Pression</h3>
+          </div>
+        </div>
+        <p>Projet photo réalisé à l'Éracom avec les apprentis créateurs de vêtement — mise en scène de la pression sociale.</p>
+        <div class="swatches">
+          <span class="swatch" style="background:#2F1C34;"></span>
+          <span class="swatch" style="background:#B14F2C;"></span>
+          <span class="swatch" style="background:#AB75B0;"></span>
+        </div>
+        <div class="tags">
+          <span class="tag">Photographie</span>
+          <span class="tag">Direction artistique</span>
+        </div>
+      </article>
+
+      <article class="card" data-project="petitmanuel">
+        <div class="card-frame" style="background-image:url('pm-couverture.jpg'); background-size:cover; background-position:center;"></div>
+        <div class="card-top">
+          <div>
+            <span class="card-num mono">03</span>
+            <h3>Petit Manuel de mise en page</h3>
+          </div>
+        </div>
+        <p>Projet d'école à l'Éracom : mise en page d'un livre de théorie exploration des mises en page.</p>
+        <div class="swatches">
+          <span class="swatch" style="background:#3A4682;"></span>
+          <span class="swatch" style="background:#C9532E;"></span>
+          <span class="swatch" style="background:#4E9C99;"></span>
+        </div>
+        <div class="tags">
+          <span class="tag">Édition</span>
+          <span class="tag">Mise en page</span>
+        </div>
+      </article>
+
+      <article class="card" data-project="traze">
+        <div class="card-frame" style="background-image:url('traze.jpg'); background-size:cover; background-position:center;"></div>
+        <div class="card-top">
+          <div>
+            <span class="card-num mono">04</span>
+            <h3>Traze</h3>
+          </div>
+        </div>
+        <p>Création de logotype et enseigne — lettrage dynamique, signalétique et déclinaison en devanture.</p>
+        <div class="swatches">
+          <span class="swatch" style="background:#141412;"></span>
+          <span class="swatch" style="background:#FAFAF8;"></span>
+        </div>
+        <div class="tags">
+          <span class="tag">Logo</span>
+          <span class="tag">Signalétique</span>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="carousel-wrap">
+      <div class="carousel-head">
+        <div class="section-eyebrow">
+          <span class="regmark"><span class="regmark-circle"></span></span>
+          <span class="mono">En vrac</span>
+        </div>
+        <div class="carousel-nav">
+          <button class="carousel-btn" id="carPrev" aria-label="Précédent">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="carousel-btn" id="carNext" aria-label="Suivant">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carouselTrack">
+        <div class="carousel-item" data-src="run.jpg" data-title="If U Can Run">
+          <img src="run.jpg" alt="If U Can Run" loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">If U Can Run</span></div>
+        </div>
+        <div class="carousel-item" data-src="frisbee.jpg" data-title="Frisbee">
+          <img src="frisbee.jpg" alt="Frisbee" loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">Frisbee</span></div>
+        </div>
+        <div class="carousel-item" data-src="quete.jpg" data-title="En quête de l'ailleurs">
+          <img src="quete.jpg" alt="En quête de l'ailleurs" loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">En quête de l'ailleurs</span></div>
+        </div>
+        <div class="carousel-item" data-src="openworld.jpg" data-title="Open World">
+          <img src="openworld.jpg" alt="Open World" loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">Open World</span></div>
+        </div>
+        <div class="carousel-item" data-src="seul.jpg" data-title="Seul.">
+          <img src="seul.jpg" alt="Seul." loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">Seul.</span></div>
+        </div>
+        <div class="carousel-item" data-src="slowwork.jpg" data-title="Slow Work">
+          <img src="slowwork.jpg" alt="Slow Work" loading="lazy">
+          <div class="carousel-overlay"><span class="carousel-item-title">Slow Work</span></div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="lightbox-backdrop" id="lightboxBackdrop">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
+    <img id="lightboxImg" src="" alt="">
+    <p class="lightbox-title mono" id="lightboxTitle"></p>
+  </div>
+</div>
+
+<div class="project-detail" id="projectDetail">
+  <div class="project-detail-inner">
+    <button class="project-back" id="projectBack">← Retour aux travaux</button>
+
+    <span class="project-tag mono" id="pdTag"></span>
+    <h2 class="project-title" id="pdTitle"></h2>
+    <dl class="project-meta" id="pdMeta"></dl>
+    <p class="project-desc" id="pdDesc"></p>
+
+    <div class="project-section-label">
+      <span class="regmark"><span class="regmark-circle"></span></span>
+      <span class="mono">Palette</span>
+    </div>
+    <div class="project-palette" id="pdPalette"></div>
+
+    <div class="project-section-label" style="justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="regmark"><span class="regmark-circle"></span></span>
+        <span class="mono">Visuels</span>
+      </div>
+      <button class="carousel-btn" id="pdCarouselNext" aria-label="Suivant">
+        <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="pd-carousel">
+      <div class="pd-carousel-track" id="pdCarouselTrack"></div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="apropos">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">
+          <span class="regmark"><span class="regmark-circle"></span></span>
+          <span class="mono">Profil</span>
+        </div>
+        <h2 class="section-title">À propos</h2>
+      </div>
+    </div>
+
+    <div class="about-header">
+      <div class="about-photo">
+        <img src="esteban-portrait.jpg" alt="Esteban Daccord">
+        <span class="about-photo-caption mono">Esteban Daccord</span>
+      </div>
+      <p class="about-intro">
+        Actuellement en formation de polygraphe chez Cavin-Baudat (2024–2028),
+        je m'intéresse autant à la rédaction et aux réseaux sociaux qu'au
+        design et à l'identité visuelle. Curieux de nature, j'aime apprendre
+        vite et transformer une idée en support concret — d'un article de
+        journal à une identité de marque complète.
+      </p>
+    </div>
+
+    <div class="about-columns">
+      <div class="about-col-main">
+
+        <div class="cv-block">
+          <h3 class="cv-block-title">Formation</h3>
+          <ul class="cv-timeline">
+            <li class="cv-item">
+              <span class="cv-date mono">2017—2021</span>
+              <div>
+                <h4>École obligatoire</h4>
+                <span class="cv-place">Cycle d'orientation de la Broye, Estavayer-le-Lac</span>
+              </div>
+            </li>
+            <li class="cv-item">
+              <span class="cv-date mono">2021—2023</span>
+              <div>
+                <h4>Maturité (non terminée)</h4>
+                <span class="cv-place">GYB, Payerne</span>
+              </div>
+            </li>
+            <li class="cv-item">
+              <span class="cv-date mono">2024—2028</span>
+              <div>
+                <h4>CFC Polygraphe<span class="cv-current">En cours</span></h4>
+                <span class="cv-place">Cavin-Baudat</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="cv-block">
+          <h3 class="cv-block-title">Expériences</h3>
+          <ul class="cv-timeline">
+            <li class="cv-item">
+              <span class="cv-date mono">2019—2022</span>
+              <div>
+                <h4>Entraîneur</h4>
+                <span class="cv-place">KBY (club de KinBall), Yverdon-les-Bains</span>
+                <p>Gestion de groupe, planification, aptitude de communication.</p>
+              </div>
+            </li>
+            <li class="cv-item">
+              <span class="cv-date mono">2021</span>
+              <div>
+                <h4>Community manager</h4>
+                <span class="cv-place">Festival du Castrum, Yverdon-les-Bains</span>
+                <p>Gestion des réseaux sociaux et création de contenu pour la promotion du festival.</p>
+              </div>
+            </li>
+            <li class="cv-item">
+              <span class="cv-date mono">2021—2022</span>
+              <div>
+                <h4>Serveur en restauration</h4>
+                <span class="cv-place">Le Rive Sud, Estavayer-le-Lac</span>
+                <p>Organisation, travail de groupe, contacts sociaux.</p>
+              </div>
+            </li>
+            <li class="cv-item">
+              <span class="cv-date mono">2022—2023</span>
+              <div>
+                <h4>Journaliste pigiste</h4>
+                <span class="cv-place">GYB, Payerne</span>
+                <p>Rédaction d'articles pour le journal du gymnase, contribution à des brainstormings pour la mise en page et l'écriture.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="about-col-side">
+
+        <div class="cv-block">
+          <h3 class="cv-block-title">Compétences</h3>
+          <div class="tags">
+            <span class="tag">Rédaction</span>
+            <span class="tag">Réseaux sociaux</span>
+            <span class="tag">Aisance sociale</span>
+            <span class="tag">Travail d'équipe</span>
+          </div>
+        </div>
+
+        <div class="cv-block">
+          <h3 class="cv-block-title">Langues</h3>
+          <div class="lang-row">
+            <div class="lang-top"><span>Français</span><span class="mono" style="color:var(--muted);">Langue maternelle</span></div>
+            <div class="lang-track"><div class="lang-fill" style="width:100%;"></div></div>
+          </div>
+          <div class="lang-row">
+            <div class="lang-top"><span>Anglais</span><span class="mono" style="color:var(--muted);">Bon niveau</span></div>
+            <div class="lang-track"><div class="lang-fill" style="width:70%;"></div></div>
+          </div>
+          <div class="lang-row">
+            <div class="lang-top"><span>Allemand</span><span class="mono" style="color:var(--muted);">Notions</span></div>
+            <div class="lang-track"><div class="lang-fill" style="width:30%;"></div></div>
+          </div>
+        </div>
+
+        <div class="cv-block">
+          <h3 class="cv-block-title">Centres d'intérêt</h3>
+          <ul class="interest-list">
+            <li><strong>Musique</strong>Écoute, production, mixage — tous genres.</li>
+            <li><strong>KinBall</strong>Joueur en club depuis 2016, en équipe nationale depuis 2023.</li>
+            <li><strong>Photo &amp; vidéo</strong>En loisir.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <h2 class="contact-title">Discutons de votre <em>projet</em>.</h2>
+    <a class="contact-cta mono" href="mailto:esteban.daccord@icloud.com">esteban.daccord@icloud.com →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:12px;">
+    <span>© 2026 Esteban Daccord</span>
+    <div style="display:flex; gap:20px;">
+      <a href="#">Instagram</a>
+      <a href="#">Behance</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---------- Données des projets (mosaïque) ----------
+  // Pour ajouter/remplacer un projet : modifie l'entrée correspondante ci-dessous.
+  // "photos" attend un tableau de chemins d'image (mets-en autant que tu veux) —
+  // pour l'instant, en attendant tes vrais visuels, l'image principale est répétée.
+  const projectsData = {
+    grandeenquete: {
+      tag: 'Édition · Print',
+      title: 'La Grande Enquête',
+      client: 'UNINE — Glossaire des patois de la Suisse romande',
+      year: '2024',
+      role: 'Flyer, marque-page',
+      desc: "Projet réalisé pour l'UNINE à l'occasion d'une conférence de La Grande Enquête, qui célèbre les 125 ans du Glossaire des patois de la Suisse romande et les 100 ans de la parution de son dictionnaire. Conception d'un flyer et d'un marque-page construits à partir des scans originaux de leurs fiches de travail — des cartes manuscrites recensant des définitions de mots de patois, collectées sur le terrain au début du 20e siècle.",
+      palette: ['#387185', '#FCACAA', '#97C5A1', '#F7E6CA'],
+      photos: [
+        { src: 'ge-flyer-recto.jpg', label: 'Flyer — recto' },
+        { src: 'ge-flyer-verso.jpg', label: 'Flyer — verso' },
+        { src: 'ge-marquepage-recto.jpg', label: 'Marque-page — recto' },
+        { src: 'ge-marquepage-verso.jpg', label: 'Marque-page — verso' },
+        { src: 'ge-carte-1.jpg', label: 'Fiche originale' },
+        { src: 'ge-carte-2.jpg', label: 'Fiche originale' },
+        { src: 'ge-carte-3.jpg', label: 'Fiche originale' }
+      ]
+    },
+    souspression: {
+      tag: 'Photographie · Direction artistique',
+      title: 'Sous-Pression',
+      client: 'Éracom',
+      year: '2026',
+      role: 'Direction artistique, photographie',
+      desc: "Projet photographique réalisé dans le cadre des cours de l'Éracom, en collaboration avec les apprentis créateurs de vêtement de l'école. À partir d'une pièce conçue par l'un des élèves — une veste rembourrée, zippée jusqu'au cou — j'ai cherché une manière de représenter la pression sociale : le vêtement devient une carapace étouffante, et le sourire tracé au ruban adhésif évoque un masque social forcé.",
+      palette: ['#2F1C34', '#B14F2C', '#AB75B0', '#BD91CD'],
+      photos: [
+        { src: 'sp-01.jpg', label: 'Sous-Pression 01' },
+        { src: 'sp-02.jpg', label: 'Sous-Pression 02' },
+        { src: 'sp-03.jpg', label: 'Sous-Pression 03' },
+        { src: 'sp-04.jpg', label: 'Sous-Pression 04' },
+        { src: 'sp-05.jpg', label: 'Sous-Pression 05' }
+      ]
+    },
+    petitmanuel: {
+      tag: 'Édition · Mise en page',
+      title: 'Petit Manuel de mise en page',
+      client: 'Éracom',
+      year: '2026',
+      role: 'Mise en page, édition',
+      desc: "Projet réalisé dans le cadre des cours de l'Éracom : la mise en page d'un livre de théorie sur la mise en page elle-même. L'idée était d'explorer des variantes de composition osées, en s'appuyant sur les principes du manuel — grilles, marges, harmonie — pour ensuite s'en affranchir librement d'une double page à l'autre.",
+      palette: ['#3A4682', '#C9532E', '#4E9C99', '#C94F82'],
+      photos: [
+        { src: 'pm-couverture.jpg', label: 'Couverture' },
+        { src: 'pm-01.jpg', label: 'Petit Manuel — page 01' },
+        { src: 'pm-02.jpg', label: 'Petit Manuel — page 02' },
+        { src: 'pm-03.jpg', label: 'Petit Manuel — page 03' },
+        { src: 'pm-04.jpg', label: 'Petit Manuel — page 04' }
+      ]
+    },
+    traze: {
+      tag: 'Logo · Signalétique',
+      title: 'Traze',
+      client: '[client]',
+      year: '2024',
+      role: 'Logo, devanture, signalétique',
+      desc: "Création de logotype et d'enseigne pour Traze : lettrage dynamique et déclinaison en devanture. Remplace ce texte par le vrai déroulé du projet.",
+      palette: ['#292A2B', '#D6D3CF', '#ECEEF2', '#FBFCFD'],
+      photos: [{ src: 'traze.jpg' }, { src: 'traze.jpg' }, { src: 'traze.jpg' }]
+    }
+  };
+
+  // ---------- Page détail projet ----------
+  const projectDetail = document.getElementById('projectDetail');
+  const pdTag = document.getElementById('pdTag');
+  const pdTitle = document.getElementById('pdTitle');
+  const pdMeta = document.getElementById('pdMeta');
+  const pdDesc = document.getElementById('pdDesc');
+  const pdPalette = document.getElementById('pdPalette');
+
+  // ---------- Carrousel infini générique (réutilisé partout sur le site) ----------
+  // Corrige le "trou" visuel qui apparaît si on clique trop vite : on verrouille
+  // les clics pendant la transition, et on détecte la vraie fin de l'animation
+  // (transitionend) plutôt qu'un délai fixe pour repositionner la boucle.
+  function createInfiniteCarousel(track, nextBtn, prevBtn){
+    if(track._infiniteCleanup) track._infiniteCleanup();
+
+    const realItems = Array.from(track.children);
+    const total = realItems.length;
+    if(total === 0) return;
+
+    const lastClone = realItems[total - 1].cloneNode(true);
+    const firstClone = realItems[0].cloneNode(true);
+    track.insertBefore(lastClone, realItems[0]);
+    track.appendChild(firstClone);
+
+    let index = 1; // position 1 = vrai premier élément (0 = clone du dernier)
+    let animating = false;
+
+    function step(){
+      const item = track.children[0];
+      const style = getComputedStyle(track);
+      const gap = parseFloat(style.columnGap || style.gap || 14);
+      return item.offsetWidth + gap;
+    }
+
+    function setPos(animate){
+      track.style.transition = animate ? 'transform .45s cubic-bezier(.4,.2,.2,1)' : 'none';
+      track.style.transform = `translateX(-${index * step()}px)`;
+    }
+    setPos(false);
+
+    function onTransitionEnd(e){
+      if(e.target !== track || e.propertyName !== 'transform') return;
+      if(index === total + 1){
+        track.style.transition = 'none';
+        index = 1;
+        track.style.transform = `translateX(-${index * step()}px)`;
+        void track.offsetWidth;
+      } else if(index === 0){
+        track.style.transition = 'none';
+        index = total;
+        track.style.transform = `translateX(-${index * step()}px)`;
+        void track.offsetWidth;
+      }
+      animating = false;
+    }
+    track.addEventListener('transitionend', onTransitionEnd);
+
+    function goNext(){
+      if(animating) return;
+      animating = true;
+      index++;
+      setPos(true);
+    }
+    function goPrev(){
+      if(animating) return;
+      animating = true;
+      index--;
+      setPos(true);
+    }
+    function onResize(){ setPos(false); }
+
+    nextBtn.addEventListener('click', goNext);
+    if(prevBtn) prevBtn.addEventListener('click', goPrev);
+    window.addEventListener('resize', onResize);
+
+    track.querySelectorAll('.carousel-item').forEach(item => {
+      item.addEventListener('click', () => openLightbox(item.dataset.src, item.dataset.title));
+    });
+
+    track._infiniteCleanup = function(){
+      track.removeEventListener('transitionend', onTransitionEnd);
+      window.removeEventListener('resize', onResize);
+      nextBtn.removeEventListener('click', goNext);
+      if(prevBtn) prevBtn.removeEventListener('click', goPrev);
+    };
+  }
+
+  function renderProjectCarousel(photos, title){
+    const track = document.getElementById('pdCarouselTrack');
+    track.innerHTML = photos.map(photo => `
+      <div class="carousel-item" data-src="${photo.src}" data-title="${photo.label || title}">
+        <img src="${photo.src}" alt="${photo.label || title}" loading="lazy">
+        <div class="carousel-overlay"><span class="carousel-item-title">${photo.label || title}</span></div>
+      </div>
+    `).join('');
+    const nextBtn = document.getElementById('pdCarouselNext');
+    createInfiniteCarousel(track, nextBtn);
+  }
+  const projectBack = document.getElementById('projectBack');
+
+  function openProjectDetail(id){
+    const p = projectsData[id];
+    if(!p) return;
+    pdTag.textContent = p.tag;
+    pdTitle.textContent = p.title;
+    pdMeta.innerHTML = `
+      <div><dt>Client</dt><dd>${p.client}</dd></div>
+      <div><dt>Année</dt><dd>${p.year}</dd></div>
+      <div><dt>Rôle</dt><dd>${p.role}</dd></div>
+    `;
+    pdDesc.textContent = p.desc;
+    pdPalette.innerHTML = p.palette.map(hex => `
+      <div class="palette-chip">
+        <div class="palette-swatch" style="background:${hex};"></div>
+        <span class="palette-hex mono">${hex}</span>
+      </div>
+    `).join('');
+    renderProjectCarousel(p.photos, p.title);
+    projectDetail.classList.add('open');
+    projectDetail.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProjectDetail(){
+    projectDetail.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => openProjectDetail(card.dataset.project));
+  });
+  projectBack.addEventListener('click', closeProjectDetail);
+
+  // ---------- Carrousel projets perso (boucle infinie dans les 2 sens) ----------
+  const track = document.getElementById('carouselTrack');
+  const carPrev = document.getElementById('carPrev');
+  const carNext = document.getElementById('carNext');
+  createInfiniteCarousel(track, carNext, carPrev);
+
+  // ---------- Lightbox ----------
+  const lightboxBackdrop = document.getElementById('lightboxBackdrop');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxTitle = document.getElementById('lightboxTitle');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  function openLightbox(src, title){
+    lightboxImg.src = src;
+    lightboxImg.alt = title;
+    lightboxTitle.textContent = title;
+    lightboxBackdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightboxBackdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxBackdrop.addEventListener('click', (e) => { if(e.target === lightboxBackdrop) closeLightbox(); });
+  document.addEventListener('keydown', (e) => {
+    if(e.key !== 'Escape') return;
+    if(lightboxBackdrop.classList.contains('open')) closeLightbox();
+    else if(projectDetail.classList.contains('open')) closeProjectDetail();
+  });
+
+  // ---------- Mode sombre ----------
+  const themeCtrl = document.getElementById('themeCtrl');
+  const themeLabel = document.getElementById('themeLabel');
+  const root = document.documentElement;
+
+  function applyTheme(theme){
+    root.setAttribute('data-theme', theme);
+    themeLabel.textContent = theme === 'dark' ? 'Clair' : 'Sombre';
+    try{ localStorage.setItem('portfolio-theme', theme); }catch(e){}
+  }
+
+  (function initTheme(){
+    let saved = null;
+    try{ saved = localStorage.getItem('portfolio-theme'); }catch(e){}
+    if(saved === 'dark' || saved === 'light'){
+      applyTheme(saved);
+    } else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+      applyTheme('dark');
+    } else {
+      applyTheme('light');
+    }
+  })();
+
+  themeCtrl.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  const entry = document.getElementById('entry');
+  const audio = document.getElementById('bgAudio');
+  const soundCtrl = document.getElementById('soundCtrl');
+
+  function startSite(){
+    entry.classList.add('hidden');
+    audio.volume = 0.6;
+    audio.play().then(() => {
+      soundCtrl.classList.remove('muted');
+      soundCtrl.classList.add('playing');
+    }).catch(() => {
+      // Lecture bloquée par le navigateur : le contrôleur reste en mode "muted",
+      // l'utilisateur peut cliquer dessus pour lancer manuellement le son.
+    });
+    entry.removeEventListener('click', startSite);
+  }
+  entry.addEventListener('click', startSite);
+
+  soundCtrl.addEventListener('click', () => {
+    if(audio.paused){
+      audio.play().then(() => {
+        soundCtrl.classList.remove('muted');
+        soundCtrl.classList.add('playing');
+      });
+    } else {
+      audio.pause();
+      soundCtrl.classList.add('muted');
+      soundCtrl.classList.remove('playing');
+    }
+  });
+</script>
+
+</body>
+</html>
